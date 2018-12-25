@@ -1,5 +1,6 @@
 import Test.HUnit
 import Day01
+import Day02
 
 day01tests = test [
   "testPositives" ~: (calculateFrequency "+10\n+20\n+30") ~?= "60",
@@ -8,7 +9,10 @@ day01tests = test [
   "testFind"      ~: (findRepeatedFrequency "+10\n+20\n+50\n-40\n-10") ~?= "30",
   "testFindCycle" ~: (findRepeatedFrequency "+3\n+3\n+4\n-2\n-4") ~?= "10"]
 
+day02tests = test [
+  "testChecksum" ~: (calculateChecksum "abcdef\nbababc\nabbcde\nabcccd\naabcdd\nabcdee\nababab\n") ~?= "12"]
+
 main :: IO ()
 main = do
-  runTestTT day01tests
+  runTestTT day02tests
   return ()

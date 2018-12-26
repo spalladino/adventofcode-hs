@@ -10,7 +10,8 @@ day01tests = test [
   "testFindCycle" ~: (findRepeatedFrequency "+3\n+3\n+4\n-2\n-4") ~?= "10"]
 
 day02tests = test [
-  "testChecksum" ~: (calculateChecksum "abcdef\nbababc\nabbcde\nabcccd\naabcdd\nabcdee\nababab\n") ~?= "12"]
+  "testChecksum" ~: (calculateChecksum "abcdef\nbababc\nabbcde\nabcccd\naabcdd\nabcdee\nababab\n") ~?= "12",
+  "testCommonLetters" ~: (findCommonLetters "abcde\nfghij\nklmno\npqrst\nfguij\naxcye\nwvxyz\n") ~?= "fgij"]
 
 main :: IO ()
 main = do

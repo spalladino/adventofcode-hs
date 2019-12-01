@@ -1,6 +1,6 @@
 # Advent of Code
 
-Haskell solutions for [advent of code 2018](https://adventofcode.com/2018).
+Haskell solutions for [advent of code 2019](https://adventofcode.com/2019). Old attempt at 2018 can be found in branch `year/2018`.
 
 ## Running the code
 

@@ -2,5 +2,5 @@ module Utils.Parse
   ( toInt
   ) where
 
-toInt :: String -> Integer
-toInt s = read s :: Integer
+toInt :: String -> Int
+toInt s = read s :: Int

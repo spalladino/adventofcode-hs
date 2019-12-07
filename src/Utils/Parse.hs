@@ -1,6 +1,7 @@
 module Utils.Parse 
   ( toInt,
-    readIntegerList
+    readIntegerList,
+    readCSList
   ) where
 
 import Data.List.Split
@@ -10,3 +11,6 @@ toInt s = read s :: Int
 
 readIntegerList :: String -> [Integer]
 readIntegerList = map (\x -> read x :: Integer) . splitOn ","
+
+readCSList :: (Read a) => String -> [a]
+readCSList = map read . splitOn ","

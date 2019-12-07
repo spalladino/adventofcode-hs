@@ -2,6 +2,7 @@ import Test.HUnit
 import qualified Day01
 import qualified Day02
 import Day03
+import qualified Day04
 import Utils.Data
 
 utilsTests = test [
@@ -35,9 +36,25 @@ day03tests = test [
   "resolveInstructions-1" ~: resolveInstructions [R 2,U 5,L 1,D 3] ~?= [(0,0),(0,1),(0,2),(1,2),(2,2),(3,2),(4,2),(5,2),(5,1),(4,1),(3,1),(2,1)]
   ]
 
+day04tests = test [
+  "hasDoubleDigits-1" ~: Day04.hasDoubleDigits [1,1,1,1,1,1] ~?= True,
+  "hasDoubleDigits-2" ~: Day04.hasDoubleDigits [1,2,3,4,5,6] ~?= False,
+  "hasDoubleDigits-3" ~: Day04.hasDoubleDigits [1,2,3,4,5,5] ~?= True,
+  "hasDoubleDigits-4" ~: Day04.hasDoubleDigits [1,1,3,4,5,5] ~?= True,
+  "hasExactlyDoubleDigits-1" ~: Day04.hasExactlyDoubleDigits [1,1,3,4,5,6] ~?= True,
+  "hasExactlyDoubleDigits-2" ~: Day04.hasExactlyDoubleDigits [1,2,3,4,5,6] ~?= False,
+  "hasExactlyDoubleDigits-3" ~: Day04.hasExactlyDoubleDigits [1,2,3,4,5,5] ~?= True,
+  "hasExactlyDoubleDigits-4" ~: Day04.hasExactlyDoubleDigits [1,1,1,4,5,5] ~?= True,
+  "hasExactlyDoubleDigits-5" ~: Day04.hasExactlyDoubleDigits [1,1,1,4,5,6] ~?= False,
+  "hasExactlyDoubleDigits-6" ~: Day04.hasExactlyDoubleDigits [1,1,2,2,3,3] ~?= True,
+  "hasExactlyDoubleDigits-7" ~: Day04.hasExactlyDoubleDigits [1,2,3,4,4,4] ~?= False,
+  "hasExactlyDoubleDigits-8" ~: Day04.hasExactlyDoubleDigits [1,1,1,1,2,2] ~?= True,
+  "hasExactlyDoubleDigits-9" ~: Day04.hasExactlyDoubleDigits [1,1,1,1,1,2] ~?= False
+  ]  
+
 main :: IO ()
 main = do
-  runTestTT day03tests
+  runTestTT day04tests
   return ()
 
 

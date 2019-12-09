@@ -1,3 +1,5 @@
+{-# LANGUAGE NamedFieldPuns #-}
+
 module Day05
     ( day05,
       intcode,
@@ -6,38 +8,45 @@ module Day05
       Execution(..)
     ) where
 
-import Utils.Parse
+import Utils.Parse (readCSList)
 import Utils.Data
 import Data.List
 import Data.List.Split
 
-data Opcode = OPSum | OPMul | OPInput | OPOutput | OPHalt deriving (Eq, Show)
+data Opcode = 
+  OPSum | OPMul | OPInput | OPOutput | OPJumpIfTrue | OPJumpIfFalse | OPLessThan | OPEquals | OPHalt 
+  deriving (Eq, Show)
+
 data ParameterMode = Position | Immediate deriving (Eq, Show)
 type ParameterValue = Int
 type Parameter = (ParameterMode, ParameterValue)
 type Parameters = [Parameter]
-data Instruction = Instr Opcode Parameters deriving (Eq, Show)
+
+data Instruction = 
+  Instr { opcode :: Opcode, params :: Parameters } 
+  deriving (Eq, Show)
 
 type Program = [Int]
 type Input = [Int]
 type Output = [Int]
 type IP = Int
-data Execution = Exec Program IP Input Output | End Program Output deriving (Eq, Show)
+
+data Execution = 
+  Exec { program :: Program, ip :: IP, input :: Input, output :: Output } 
+  | End { program :: Program, output :: Output } 
+  deriving (Eq, Show)
 
 -- |https://adventofcode.com/2019/day/5
 day05 :: IO ()
-day05 = interact $ show . getOutput . intcode [1] . readCSList
-
-getOutput :: Execution -> Output
-getOutput (End _ output) = output
+day05 = interact $ show . output . intcode [5] . readCSList
 
 intcode :: Input -> Program -> Execution
 intcode input prg = head $ dropWhile isRunning $ iterate intcodeStep initialState
   where initialState = Exec prg 0 input []
 
 isRunning :: Execution -> Bool
-isRunning (Exec _ _ _ _) = True
-isRunning (End _ _) = False
+isRunning Exec{} = True
+isRunning End{} = False
 
 intcodeStep :: Execution -> Execution
 intcodeStep exec = runInstruction instruction exec
@@ -45,22 +54,46 @@ intcodeStep exec = runInstruction instruction exec
 
 runInstruction :: Instruction -> Execution -> Execution
 
-runInstruction (Instr OPHalt _) (Exec prg _ _ output) = End prg output
+runInstruction (Instr OPHalt _) Exec {program, output} = 
+  End program output
 
-runInstruction (Instr OPInput [(_, pos)]) (Exec prg ip input output) = 
-  Exec (setPos pos (head input) prg) (advanceIP OPInput ip) (tail input) output
+runInstruction instr@(Instr OPInput [(_, pos)]) exec@Exec { program, input } = 
+  advanceIP instr exec { 
+    program = setPos pos (head input) program,
+    input = tail input }
 
-runInstruction (Instr OPOutput [param]) (Exec prg ip input output) = 
-  Exec prg (advanceIP OPOutput ip) input (output ++ [val])
-  where val = solveParam prg param
+runInstruction instr@(Instr OPOutput [param]) exec@Exec{ program, output } = 
+  advanceIP instr exec {
+    output = output ++ [solveParam program param] }
 
-runInstruction (Instr OPSum [op1, op2, (_,dest)]) (Exec prg ip input output) = 
-  Exec (setPos dest res prg) (advanceIP OPSum ip) input output
-  where res = (solveParam prg op1) + (solveParam prg op2)
+runInstruction instr@Instr{opcode=OPSum} exec =
+  runArithmeticInstruction (+) instr exec
 
-runInstruction (Instr OPMul [op1, op2, (_,dest)]) (Exec prg ip input output) = 
-  Exec (setPos dest res prg) (advanceIP OPMul ip) input output
-  where res = (solveParam prg op1) * (solveParam prg op2)
+runInstruction instr@Instr{opcode=OPMul} exec =
+  runArithmeticInstruction (*) instr exec
+  
+runInstruction instr@Instr{opcode=OPJumpIfTrue} exec = 
+  runJumpInstruction (/=0) instr exec
+
+runInstruction instr@Instr{opcode=OPJumpIfFalse} exec = 
+  runJumpInstruction (==0) instr exec
+
+runInstruction instr@Instr{opcode=OPLessThan} exec = 
+  runArithmeticInstruction ((toInt .) . (<)) instr exec
+
+runInstruction instr@Instr{opcode=OPEquals} exec = 
+  runArithmeticInstruction ((toInt .) . (==)) instr exec
+  
+runArithmeticInstruction :: (Int -> Int -> Int) -> Instruction -> Execution -> Execution
+runArithmeticInstruction operation instr@(Instr opcode [op1, op2, (_,dest)]) exec@Exec{program} = 
+  advanceIP instr exec {
+    program = setPos dest res program } 
+  where res = operation (solveParam program op1) (solveParam program op2)
+
+runJumpInstruction :: (Int -> Bool) -> Instruction -> Execution -> Execution
+runJumpInstruction check (Instr opcode [cond, dest]) exec@Exec { program, ip } =
+  exec {
+    ip = if check (solveParam program cond) then solveParam program dest else incrementIP opcode ip }    
 
 readPos :: Int -> Program -> Int
 readPos i prg = prg !! i
@@ -72,8 +105,11 @@ solveParam :: Program -> Parameter -> Int
 solveParam _ (Immediate, value) = value
 solveParam prg (Position, pos) = readPos pos prg
 
-advanceIP :: Opcode -> IP -> IP
-advanceIP opcode ip = ip + paramCount opcode + 1
+advanceIP :: Instruction -> Execution -> Execution
+advanceIP Instr{opcode} exec@Exec{ip} = exec{ ip = incrementIP opcode ip }
+
+incrementIP :: Opcode -> IP -> IP
+incrementIP opcode ip = ip + paramCount opcode + 1
 
 parseInstruction :: Execution -> Instruction
 parseInstruction (Exec prg ip input output) = instruction
@@ -89,6 +125,10 @@ paramCount OPSum = 3
 paramCount OPMul = 3
 paramCount OPInput = 1
 paramCount OPOutput = 1
+paramCount OPJumpIfTrue = 2
+paramCount OPJumpIfFalse = 2
+paramCount OPLessThan = 3
+paramCount OPEquals = 3
 paramCount OPHalt = 0
 
 parseOperation :: Int -> (Opcode, [ParameterMode])
@@ -99,6 +139,10 @@ toOpcode 1 = OPSum
 toOpcode 2 = OPMul
 toOpcode 3 = OPInput
 toOpcode 4 = OPOutput
+toOpcode 5 = OPJumpIfTrue
+toOpcode 6 = OPJumpIfFalse
+toOpcode 7 = OPLessThan
+toOpcode 8 = OPEquals
 toOpcode 99 = OPHalt
 toOpcode x = error ("Unexpected opcode " ++ show x)
 
@@ -110,5 +154,7 @@ toMode :: Int -> ParameterMode
 toMode 0 = Position
 toMode 1 = Immediate
 
-
+toInt :: Bool -> Int
+toInt True = 1
+toInt False = 0
 

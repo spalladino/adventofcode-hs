@@ -1,7 +1,10 @@
 module Day06
     ( day06,
       parseOrbits,
-      orbitsCount
+      orbitsCount,
+      orbitsDistance,
+      pathTo,
+      pathsDistance
     ) where
 
 import Utils.Data
@@ -13,7 +16,7 @@ import qualified Data.Map.Strict as Map
 
 -- |https://adventofcode.com/2019/day/6
 day06 :: IO ()
-day06 = interact $ show . orbitsCount 0 . parseOrbits
+day06 = interact $ show . orbitsDistance "YOU" "SAN" . parseOrbits
 
 data Planet = 
     Planet { orbiters :: [Planet], name :: String }
@@ -36,3 +39,26 @@ resolveOrbits ps name = Planet (map (resolveOrbits ps) (ps ! name)) name
 orbitsCount :: Int -> Planet -> Int
 orbitsCount n (Planet [] _) = n
 orbitsCount n (Planet orbiters _) = n + sum (map (orbitsCount (n + 1)) orbiters)
+
+orbitsDistance :: String -> String -> Planet -> Int
+orbitsDistance n1 n2 com = pathsDistance p1 p2
+    where p1 = pathTo ((==n1) . name) com
+          p2 = pathTo ((==n2) . name) com
+
+pathTo :: (Planet -> Bool) -> Planet -> Planets
+pathTo f planet@(Planet orbiters _) 
+    | null downPath = []
+    | otherwise = planet:downPath
+    where downPath = ifnull (filter f orbiters) (concatMap (pathTo f) orbiters)
+
+pathsDistance :: Planets -> Planets -> Int
+pathsDistance xs [] = length xs
+pathsDistance [] ys = length ys
+pathsDistance (x:xs) (y:ys)
+    | x == y = pathsDistance xs ys
+    | otherwise = length xs + length ys
+
+ifnull :: [a] -> [a] -> [a]
+ifnull a b
+    | null a = b
+    | otherwise = a

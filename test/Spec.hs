@@ -10,6 +10,8 @@ import Utils.Data
 
 import Day03 (PathInstruction(..))
 
+import Test06
+
 utilsTests = test [
   "assocIn-list" ~: (assocIn 2 60 [10,20,30,40]) ~?= [10,20,60,40]
   ]
@@ -84,7 +86,5 @@ day05tests = test [
 
 main :: IO ()
 main = do
-  runTestTT day05tests
+  runTestTT test06
   return ()
-
-

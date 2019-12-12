@@ -5,7 +5,8 @@ module Day05
       intcode,
       intcodeStep,
       parseInstruction,
-      Execution(..)
+      Execution(..),
+      Program
     ) where
 
 import Utils.Parse (readCSList)

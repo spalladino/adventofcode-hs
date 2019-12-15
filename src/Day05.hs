@@ -3,10 +3,18 @@
 module Day05
     ( day05,
       intcode,
+      intcodeRun,
       intcodeStep,
+      initialState,
       parseInstruction,
+      isRunning,
+      isEnded,
+      pushInput,
+      consumeOutput,
       Execution(..),
-      Program
+      Program,
+      Input,
+      Output
     ) where
 
 import Utils.Parse (readCSList)
@@ -34,7 +42,10 @@ type IP = Int
 
 data Execution = 
   Exec { program :: Program, ip :: IP, input :: Input, output :: Output } 
-  | End { program :: Program, output :: Output } 
+  | AwaitingInput { program :: Program, ip :: IP, output :: Output }
+  | End { program :: Program, output :: Output }
+  | Output { output :: Output }
+  | NilExecution
   deriving (Eq, Show)
 
 -- |https://adventofcode.com/2019/day/5
@@ -42,21 +53,44 @@ day05 :: IO ()
 day05 = interact $ show . output . intcode [5] . readCSList
 
 intcode :: Input -> Program -> Execution
-intcode input prg = head $ dropWhile isRunning $ iterate intcodeStep initialState
-  where initialState = Exec prg 0 input []
+intcode input program = intcodeRun input (initialState program [])
+
+intcodeRun :: Input -> Execution -> Execution
+intcodeRun input state = head $ dropWhile isRunning $ iterate intcodeStep $ pushInput state input
+
+initialState :: Program -> Input -> Execution
+initialState program input = Exec { program, ip=0, input, output=[] }
 
 isRunning :: Execution -> Bool
 isRunning Exec{} = True
+isRunning AwaitingInput{} = False
 isRunning End{} = False
+
+isEnded :: Execution -> Bool
+isEnded Exec{} = False
+isEnded AwaitingInput{} = False
+isEnded End{} = True
 
 intcodeStep :: Execution -> Execution
 intcodeStep exec = runInstruction instruction exec
   where instruction = parseInstruction exec
 
-runInstruction :: Instruction -> Execution -> Execution
+pushInput :: Execution -> Input -> Execution
+pushInput exec@Exec{ input } pushed = exec{ input=input++pushed }
+pushInput exec@AwaitingInput{ program, ip, output } pushed = Exec{ program, ip, output, input=pushed }
 
+consumeOutput :: Execution -> (Execution, Output)
+consumeOutput exec@Exec{ output } = (exec{ output=[] }, output)
+consumeOutput exec@AwaitingInput{ output } = (exec{ output=[] }, output)
+consumeOutput exec@End{ output } = (exec{ output=[] }, output)
+consumeOutput exec@Output{ output } = (exec{ output=[] }, output)
+
+runInstruction :: Instruction -> Execution -> Execution
 runInstruction (Instr OPHalt _) Exec {program, output} = 
   End program output
+
+runInstruction instr@(Instr OPInput [(_, pos)]) exec@Exec { program, ip, input=[], output } = 
+  AwaitingInput { program, ip, output }
 
 runInstruction instr@(Instr OPInput [(_, pos)]) exec@Exec { program, input } = 
   advanceIP instr exec { 

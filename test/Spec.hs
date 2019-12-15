@@ -1,7 +1,7 @@
 import Test.HUnit
-import Test07
+import Test08
 
 main :: IO ()
 main = do
-  runTestTT test07
+  runTestTT test08
   return ()

@@ -9,10 +9,10 @@ import Data.List.Split
 
 -- |https://adventofcode.com/2019/day/2
 day02p1 :: IO ()
-day02p1 = interact $ show . head . intcode . setupProgram 12 2 . readIntegerList
+day02p1 = interact $ show . head . intcode . setupProgram 12 2 . readIntegerCSList
 
 day02 :: IO ()
-day02 = interact $ show . encodeInput . findInput 19690720 . readIntegerList
+day02 = interact $ show . encodeInput . findInput 19690720 . readIntegerCSList
 
 type Program = [Integer]
 type IP = Int

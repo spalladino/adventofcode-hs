@@ -6,6 +6,7 @@ module Day09
       intcodeRun,
       intcodeStep,
       initialState,
+      readProgram,
       parseInstruction,
       isRunning,
       isEnded,
@@ -56,7 +57,10 @@ data Execution =
 
 -- |https://adventofcode.com/2019/day/9
 day09 :: IO ()
-day09 = interact $ show . output . intcode [2] . readCSList
+day09 = interact $ show . output . intcode [2] . readProgram
+
+readProgram :: String -> Program
+readProgram = readCSList
 
 intcode :: Input -> Program -> Execution
 intcode input program = intcodeRun input (initialState program [])
